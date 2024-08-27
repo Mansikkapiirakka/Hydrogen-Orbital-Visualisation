@@ -294,6 +294,7 @@ pub fn WndProc(hwnd: win.HWND, msg: win.UINT, wParam: win.WPARAM, lParam: win.LP
         window.WM_CREATE => {
             init_gl(hwnd) catch |err| {
                 std.debug.print("{}\n", .{err});
+                return -1;
             };
             std.debug.print("n = 1, l = 0, m = 0\n", .{});
         },
