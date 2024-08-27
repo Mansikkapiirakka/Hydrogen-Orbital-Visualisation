@@ -1,11 +1,10 @@
 const std = @import("std");
 const win = std.os.windows;
-const window = @import("window.zig");
+const window = @import("windows.zig");
 const gl = @import("gl.zig");
 
 const WM_CREATE: win.UINT = 0x0001;
 
-extern "user32" fn MessageBoxA(hWNDS: ?win.HANDLE, lpText: ?win.LPCSTR, lpCaption: ?win.LPCSTR, uType: win.UINT) callconv(.C) c_int;
 extern "user32" fn RegisterClassExA(*window.WNDCLASSEXA) callconv(.C) win.ATOM;
 extern "user32" fn CreateWindowExA(dwExStyle: win.DWORD, lpClassName: ?win.LPCSTR, lpWindowName: ?win.LPCSTR, dwStyle: win.DWORD, x: i32, y: i32, nWidth: i32, nHeight: i32, hWndParent: ?win.HWND, hMenu: ?win.HMENU, hInstance: ?win.HINSTANCE, lpParam: ?win.LPVOID) callconv(.C) win.HWND;
 extern "user32" fn ShowWindow(hwnd: win.HWND, nCmdShow: c_int) callconv(.C) win.BOOL;
@@ -94,16 +93,11 @@ const Shader = struct {
         gl.AttachShader(program, self.handle);
     }
 
-    fn compile(self: *Shader, alloactor: std.mem.Allocator, path: []const u8) !void {
-        var source_file = try openFileRelative(alloactor, path);
-        defer source_file.close();
-        var source = try source_file.readToEndAllocOptions(alloactor, 50_000, null, 1, 0);
-        defer alloactor.free(source);
+    fn compile(self: *Shader, str: [*:0]const u8) !void {
+        var l = [1]i32{-1};
+        const source = [1][*:0]const u8{str};
 
-        //var l: i32 = @truncate(@as(isize, @bitCast(source.len)));
-        var l: i32 = -1;
-        //@as([*]i32, @ptrCast(&l)))
-        gl.ShaderSource(self.handle, 1, @as([*][*:0]u8, @ptrCast(&source)), @as([*]i32, @ptrCast(&l)));
+        gl.ShaderSource(self.handle, 1, @constCast(&source), @as([*]i32, &l));
         gl.CompileShader(self.handle);
         var res: i32 = 1;
         gl.GetShaderiv(self.handle, gl.GL_COMPILE_STATUS, &res);
@@ -239,11 +233,13 @@ fn init_gl(hwnd: win.HWND) !void {
     std.debug.print("OpengGl version: {}.{}\n", .{ ma_version, mi_version });
     createVBO();
     prog.p1 = Program.create();
+    const f_source = @embedFile("shaders/fragment.frag");
+    const v_source = @embedFile("shaders/vertex.vert");
     shader.fragment = Shader.create(gl.GL_FRAGMENT_SHADER);
-    try shader.fragment.compile(ctx.alloc, "../shaders/fragment.frag");
+    try shader.fragment.compile(f_source);
     shader.fragment.attach(prog.p1.handle);
     shader.vertex = Shader.create(gl.GL_VERTEX_SHADER);
-    try shader.vertex.compile(ctx.alloc, "../shaders/vertex.vert");
+    try shader.vertex.compile(v_source);
     shader.vertex.attach(prog.p1.handle);
     prog.p1.link();
     prog.p1.validate();
@@ -299,6 +295,7 @@ pub fn WndProc(hwnd: win.HWND, msg: win.UINT, wParam: win.WPARAM, lParam: win.LP
             init_gl(hwnd) catch |err| {
                 std.debug.print("{}\n", .{err});
             };
+            std.debug.print("n = 1, l = 0, m = 0\n", .{});
         },
         window.WM_DESTROY => {
             _ = wglDeleteContext(ctx.gl);
@@ -328,8 +325,6 @@ pub fn WndProc(hwnd: win.HWND, msg: win.UINT, wParam: win.WPARAM, lParam: win.LP
             const p: usize = @as(usize, @bitCast(lParam));
             const x: u16 = @truncate(p);
             const y: u16 = @truncate(p >> 16);
-            std.debug.print("lParam: 0x{X:0>8}\n", .{@as(usize, @bitCast(lParam))});
-            std.debug.print("xy: {} {}\n", .{ x, y });
             gl.Viewport(0, 0, x, y);
             uniform.screen_xy.set(x, y);
             //const err = gl.GetError();

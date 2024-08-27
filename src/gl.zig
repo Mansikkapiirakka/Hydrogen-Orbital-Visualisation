@@ -2607,7 +2607,7 @@ pub fn CreateProgram() u32 {
 pub fn CreateShader(shader_type: u32) u32 {
     return gl.CreateShader.ptr(shader_type);
 }
-pub fn ShaderSource(shader: u32, count: u32, string: [*][*:0]u8, length: [*]i32) void {
+pub fn ShaderSource(shader: u32, count: u32, string: [*][*:0]const u8, length: [*]i32) void {
     gl.ShaderSource.ptr(shader, count, string, length);
 }
 pub fn CompileShader(shader: u32) void {
