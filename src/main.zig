@@ -106,6 +106,7 @@ const Shader = struct {
             var len: u32 = 1;
             gl.GetShaderInfoLog(self.handle, info_log.len, &len, &info_log);
             std.debug.print("{s}\n", .{info_log[0..len]});
+            return error.FailedToCompileShader;
         }
     }
 };
@@ -305,8 +306,8 @@ pub fn WndProc(hwnd: win.HWND, msg: win.UINT, wParam: win.WPARAM, lParam: win.LP
         window.WM_MOUSE_WHEEL => {
             const Delta: i16 = @truncate(@as(isize, (@bitCast(wParam >> 16))));
             if (Delta < 0) {
-                uniform.scale.set(std.math.clamp(uniform.scale.value - 0.02, 0.0, 10.0));
-            } else uniform.scale.set(std.math.clamp(uniform.scale.value + 0.02, 0.0, 10.0));
+                uniform.scale.set(std.math.clamp(uniform.scale.value * 0.8, 0.0, 10.0));
+            } else uniform.scale.set(std.math.clamp(uniform.scale.value / 0.8, 0.0, 10.0));
 
             //std.debug.print("M-wheel: {}\n", .{dir});
         },

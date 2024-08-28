@@ -1,6 +1,6 @@
 #version 460 core
 
-out vec4 gl_FragColor;
+out vec4 FragColor;
 in vec4 gl_FragCoord;
 
 uniform float scale;
@@ -11,23 +11,7 @@ const float pi = 3.1415926535897932384626433832795;
 const float e = 2.71828;
 const float a1 = 5.29177210544e-1; 
 
-vec2 powi2(vec2 z) {
-	return vec2(pow(z.x, 2) - pow(z.y, 2), -2 * z.x*z.y);
-}
-
-float gamma(float x) {
-	return sqrt(2*pi*x)* pow(x/e, x) * pow(x*sinh(1/x), x/2) * exp(7/(324*pow(x, 3)*(35*pow(x, 2)+33)));
-}
-
-vec2 expi(float theta) {
-	return vec2(cos(theta), sin(theta));
-}
-
-float nck(float n, float k) {
-	return gamma(n) / gamma(k) / gamma(n-k);
-}
-
-vec4 lerp4(vec4 a, vec4 b, vec4 c, vec4 d, float t) {
+vec4 bezier3(vec4 a, vec4 b, vec4 c, vec4 d, float t) {
 	vec4 ab = mix(a, b, t);
 	vec4 bc = mix(b, c, t);
 	vec4 cd = mix(c, d, t);
@@ -88,10 +72,10 @@ vec4 color() {
 	}
 	p*=p;
 	
-	return lerp4(a, b, c, d, p);
+	return bezier3(a, b, c, d, p);
 }
 
 void main() {
-	gl_FragColor = color();
+	FragColor = color();
 }
 
